@@ -185,6 +185,66 @@ const data = {
       "buggy": "class A:\n    def play():\n        print('A')\na = A()\na.play(a)",
       "answer": "class A:\n    def play(self):\n        print('A')\na = A()\na.play()",
       "explanation": "'self' is passed automatically when calling an instance method. You must define it in the parameter list, but not pass it explicitly."
+    },
+    {
+      "title": "Fix the Lambda Sort Key",
+      "buggy": "words = ['banana', 'fig', 'apple']\nwords.sort(key=lambda: len(w))\nprint(words)",
+      "answer": "words = ['banana', 'fig', 'apple']\nwords.sort(key=lambda w: len(w))\nprint(words)",
+      "explanation": "The lambda is missing its parameter `w`. The correct syntax is `lambda w: len(w)` so the function receives each element."
+    },
+    {
+      "title": "Fix the Default Parameter",
+      "buggy": "def greet(name, msg):\n    print(f'{msg}, {name}!')\n\ngreet('Alice')",
+      "answer": "def greet(name, msg='Hello'):\n    print(f'{msg}, {name}!')\n\ngreet('Alice')",
+      "explanation": "`msg` has no default value, so calling `greet('Alice')` raises a `TypeError`. Give it a default like `msg='Hello'`."
+    },
+    {
+      "title": "Fix the Map Lambda Syntax",
+      "buggy": "nums = [1, 2, 3]\nresult = list(map(lambda x = x * 2, nums))\nprint(result)",
+      "answer": "nums = [1, 2, 3]\nresult = list(map(lambda x: x * 2, nums))\nprint(result)",
+      "explanation": "Lambda syntax requires a colon (`:`) not `=` between the parameter and its expression: `lambda x: x * 2`."
+    },
+    {
+      "title": "Fix the Missing Global",
+      "buggy": "total = 100\n\ndef add_bonus():\n    total += 50\n\nadd_bonus()\nprint(total)",
+      "answer": "total = 100\n\ndef add_bonus():\n    global total\n    total += 50\n\nadd_bonus()\nprint(total)",
+      "explanation": "Without `global total`, Python treats `total` as a local variable inside the function, causing an `UnboundLocalError`. Add `global total` before modifying it."
+    },
+    {
+      "title": "Fix the Missing Nonlocal",
+      "buggy": "def outer():\n    x = 10\n    def inner():\n        x += 5\n    inner()\n    print(x)\nouter()",
+      "answer": "def outer():\n    x = 10\n    def inner():\n        nonlocal x\n        x += 5\n    inner()\n    print(x)\nouter()",
+      "explanation": "Without `nonlocal x`, `x += 5` treats `x` as a new local variable in `inner`, causing an `UnboundLocalError`. Use `nonlocal x` to modify the enclosing variable."
+    },
+    {
+      "title": "Fix the Sort — Missing key=",
+      "buggy": "nums = [3, 1, 4, 1, 5]\nnums.sort(lambda x: x)\nprint(nums)",
+      "answer": "nums = [3, 1, 4, 1, 5]\nnums.sort(key=lambda x: x)\nprint(nums)",
+      "explanation": "`.sort()` does not accept a bare positional lambda. The lambda must be passed as the keyword argument `key=lambda x: x`."
+    },
+    {
+      "title": "Fix the Default — Wrong Argument Order",
+      "buggy": "def describe(age=0, name):\n    print(f'{name} is {age}')\n\ndescribe(30, 'Alice')",
+      "answer": "def describe(name, age=0):\n    print(f'{name} is {age}')\n\ndescribe('Alice', 30)",
+      "explanation": "In Python, non-default parameters must come before default parameters. `name` has no default, so it must be listed first."
+    },
+    {
+      "title": "Fix the Map — Missing list()",
+      "buggy": "nums = [1, 2, 3]\nresult = map(lambda x: x * 3, nums)\nprint(result[0])",
+      "answer": "nums = [1, 2, 3]\nresult = list(map(lambda x: x * 3, nums))\nprint(result[0])",
+      "explanation": "`map()` returns a lazy map object, not a list. Wrap it with `list()` before indexing it with `[0]`."
+    },
+    {
+      "title": "Fix the Global — Wrong Variable Name",
+      "buggy": "items = [1, 2, 3]\n\ndef reset_items():\n    items = []\n\nreset_items()\nprint(items)",
+      "answer": "items = [1, 2, 3]\n\ndef reset_items():\n    global items\n    items = []\n\nreset_items()\nprint(items)",
+      "explanation": "Without `global items`, the assignment `items = []` creates a brand-new local variable. The module-level list is unchanged. Add `global items` to rebind the global name."
+    },
+    {
+      "title": "Fix the global vs nonlocal",
+      "buggy": "def outer():\n    val = 0\n    def inner():\n        global val\n        val += 1\n    inner()\n    print(val)\nouter()",
+      "answer": "def outer():\n    val = 0\n    def inner():\n        nonlocal val\n        val += 1\n    inner()\n    print(val)\nouter()",
+      "explanation": "`global val` looks for `val` at module level, but `val` lives in `outer()`. Use `nonlocal val` to correctly reference the enclosing scope's variable."
     }
   ],
   "OUTPUT_QUESTIONS": [
@@ -373,6 +433,72 @@ const data = {
       "code": "class Parent:\n    def val(self): return 5\nclass Child(Parent):\n    def val(self): return super().val() + 3\nprint(Child().val())",
       "answer": "8",
       "explanation": "super().val() calls the Parent's val() which returns 5. Then 3 is added to return 8."
+    },
+    {
+      "title": "Lambda Sort Key — By Length",
+      "code": "words = ['banana', 'fig', 'apple', 'kiwi']\nwords.sort(key=lambda w: len(w))\nprint(words)",
+      "answer": "['fig', 'kiwi', 'apple', 'banana']",
+      "explanation": "`sort(key=lambda w: len(w))` orders strings shortest-to-longest. 'fig'(3), 'kiwi'(4), 'apple'(5), 'banana'(6)."
+    },
+    {
+      "title": "Lambda Sort Key — Tuple Index",
+      "code": "students = [('Alice', 85), ('Bob', 72), ('Carol', 91)]\nstudents.sort(key=lambda s: s[1])\nfor name, score in students:\n    print(name)",
+      "answer": "Bob\nAlice\nCarol",
+      "explanation": "Sorting by the second element (score) gives 72, 85, 91 — so Bob, Alice, Carol."
+    },
+    {
+      "title": "Default Parameter Value",
+      "code": "def add(A, B=10):\n    return A + B\n\nprint(add(5))\nprint(add(5, 3))",
+      "answer": "15\n8",
+      "explanation": "First call omits B so the default 10 is used: 5+10=15. Second call passes B=3: 5+3=8."
+    },
+    {
+      "title": "Map with Lambda — Squaring",
+      "code": "nums = [2, 3, 4, 5]\nresult = list(map(lambda x: x ** 2, nums))\nprint(result)",
+      "answer": "[4, 9, 16, 25]",
+      "explanation": "`map` applies the lambda to every element, squaring each: 2²=4, 3²=9, 4²=16, 5²=25."
+    },
+    {
+      "title": "Global Keyword",
+      "code": "counter = 0\n\ndef increment():\n    global counter\n    counter += 1\n\nincrement()\nincrement()\nincrement()\nprint(counter)",
+      "answer": "3",
+      "explanation": "`global counter` lets the function modify the module-level variable. After three calls it equals 3."
+    },
+    {
+      "title": "Nonlocal — Closure Counter",
+      "code": "def make_counter():\n    count = 0\n    def inc():\n        nonlocal count\n        count += 1\n        return count\n    return inc\n\nc = make_counter()\nprint(c())\nprint(c())\nprint(c())",
+      "answer": "1\n2\n3",
+      "explanation": "`nonlocal count` lets `inc` modify `count` in the enclosing scope. Each call increments the shared variable."
+    },
+    {
+      "title": "Lambda Sort Key — Reverse by Value",
+      "code": "scores = [('Alice', 70), ('Bob', 90), ('Carol', 80)]\nscores.sort(key=lambda x: -x[1])\nfor name, score in scores:\n    print(name)",
+      "answer": "Bob\nCarol\nAlice",
+      "explanation": "Using `-x[1]` as the key sorts by score in descending order: 90 (Bob), 80 (Carol), 70 (Alice)."
+    },
+    {
+      "title": "Default Parameter — Power Function",
+      "code": "def power(base, exp=2):\n    return base ** exp\n\nprint(power(3))\nprint(power(2, 10))",
+      "answer": "9\n1024",
+      "explanation": "First call uses default exp=2: 3²=9. Second call uses exp=10: 2¹⁰=1024."
+    },
+    {
+      "title": "Map with Lambda — Uppercase",
+      "code": "words = ['hello', 'world', 'python']\nresult = list(map(lambda w: w.upper(), words))\nprint(result)",
+      "answer": "['HELLO', 'WORLD', 'PYTHON']",
+      "explanation": "`map` applies `.upper()` to each string via the lambda, returning a new list of uppercase strings."
+    },
+    {
+      "title": "Global — List Reassignment",
+      "code": "items = [1, 2, 3]\n\ndef reset():\n    global items\n    items = []\n\nreset()\nprint(items)",
+      "answer": "[]",
+      "explanation": "`global items` allows the function to rebind the module-level name `items` to a new empty list."
+    },
+    {
+      "title": "Nonlocal — Accumulating Adder",
+      "code": "def make_adder(n):\n    total = 0\n    def add():\n        nonlocal total\n        total += n\n        return total\n    return add\n\nadd5 = make_adder(5)\nprint(add5())\nprint(add5())",
+      "answer": "5\n10",
+      "explanation": "`nonlocal total` keeps `total` alive between calls. Each call adds `n=5`, so results are 5 then 10."
     }
   ],
   "MINI_PROJECTS": [
@@ -410,6 +536,62 @@ const data = {
       "answer": "for i in range(1, 16):\n    if i % 3 == 0 and i % 5 == 0:\n        print(\"FizzBuzz\")\n    elif i % 3 == 0:\n        print(\"Fizz\")\n    elif i % 5 == 0:\n        print(\"Buzz\")\n    else:\n        print(i)",
       "expected_output": "1\n2\nFizz\n4\nBuzz\nFizz\n7\n8\nFizz\nBuzz\n11\nFizz\n13\n14\nFizzBuzz",
       "explanation": "Check divisibility by 15 (both) first, then 3, then 5, else print the number."
+    },
+    {
+      "title": "Q5: Save and Display Student Grades (File + Exceptions)",
+      "description": "Write a Python program with two functions:\n1. `save_grades(name, grade)` — writes the student name and grade to a file called `grades.txt`.\n2. `display_grades()` — reads and prints the contents of `grades.txt`. Use exception handling for `FileNotFoundError`.",
+      "answer": "def save_grades(name, grade):\n    with open('grades.txt', 'a') as f:\n        f.write(f'{name}: {grade}\\n')\n\ndef display_grades():\n    try:\n        with open('grades.txt', 'r') as f:\n            print(f.read())\n    except FileNotFoundError:\n        print('File not found.')\n\nsave_grades('Alice', 90)\nsave_grades('Bob', 75)\ndisplay_grades()",
+      "expected_output": "Alice: 90\nBob: 75",
+      "explanation": "Use `open()` in append mode `'a'` to add records without overwriting. In `display_grades()`, wrap `open()` in a `try/except FileNotFoundError` block to handle a missing file gracefully."
+    },
+    {
+      "title": "Q6: Odd Numbers Filter and Average (Lambda)",
+      "description": "Write a Python program using a lambda expression to extract the odd numbers from a list and calculate their average.\n\nUse the list: `numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]`",
+      "answer": "numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\nodds = list(filter(lambda x: x % 2 != 0, numbers))\naverage = sum(odds) / len(odds)\nprint('Odd numbers:', odds)\nprint('Average:', average)",
+      "expected_output": "Odd numbers: [1, 3, 5, 7, 9]\nAverage: 5.0",
+      "explanation": "`filter()` with a lambda keeps only items where `x % 2 != 0`. Then `sum(odds) / len(odds)` computes the average of [1,3,5,7,9] which is 25/5 = 5.0."
+    },
+    {
+      "title": "Q7: Average Exam Scores with Exception Handling",
+      "description": "Write a Python function `get_average()` that:\n1. Asks the user to enter three exam scores.\n2. Calculates and prints their average.\n3. Handles `ValueError` (non-numeric input) and `ZeroDivisionError`.",
+      "answer": "def get_average():\n    try:\n        s1 = float(input('Enter score 1: '))\n        s2 = float(input('Enter score 2: '))\n        s3 = float(input('Enter score 3: '))\n        count = 3\n        average = (s1 + s2 + s3) / count\n        print('Average:', average)\n    except ValueError:\n        print('Invalid input. Please enter numbers only.')\n    except ZeroDivisionError:\n        print('Cannot divide by zero.')\n\nget_average()",
+      "expected_output": "Average: 85.0",
+      "explanation": "Wrap `float(input(...))` calls in `try/except`. `ValueError` is raised if the user types text instead of a number. `ZeroDivisionError` is included as a guard even though dividing by 3 is safe here — it demonstrates good practice."
+    },
+    {
+      "title": "Q8: Constructor and Destructor",
+      "description": "Write a Python program to explain the concept of constructor (`__init__`) and destructor (`__del__`) using a simple class.",
+      "answer": "class MyClass:\n    def __init__(self, name):\n        self.name = name\n        print(f'Constructor called for {self.name}')\n\n    def __del__(self):\n        print(f'Destructor called for {self.name}')\n\nobj = MyClass('Object1')\nprint('Using the object')\ndel obj",
+      "expected_output": "Constructor called for Object1\nUsing the object\nDestructor called for Object1",
+      "explanation": "`__init__` is the constructor — it runs automatically when an object is created. `__del__` is the destructor — it runs when the object is deleted with `del` or goes out of scope."
+    },
+    {
+      "title": "Q9: Encapsulation with Private Attributes",
+      "description": "Write a Python program to explain encapsulation by creating a class with a private attribute and getter/setter methods.",
+      "answer": "class BankAccount:\n    def __init__(self, balance):\n        self.__balance = balance\n\n    def get_balance(self):\n        return self.__balance\n\n    def deposit(self, amount):\n        self.__balance += amount\n\naccount = BankAccount(1000)\naccount.deposit(500)\nprint('Balance:', account.get_balance())",
+      "expected_output": "Balance: 1500",
+      "explanation": "`self.__balance` is a private attribute (name-mangled by Python). It cannot be accessed directly from outside the class. Instead, `get_balance()` and `deposit()` provide controlled access — this is encapsulation."
+    },
+    {
+      "title": "Q10: Class and Object",
+      "description": "Write a Python program to explain the concept of class and object by creating a `Student` class and two objects from it.",
+      "answer": "class Student:\n    def __init__(self, name, grade):\n        self.name = name\n        self.grade = grade\n\n    def display(self):\n        print(f'Name: {self.name}, Grade: {self.grade}')\n\ns1 = Student('Alice', 'A')\ns2 = Student('Bob', 'B')\ns1.display()\ns2.display()",
+      "expected_output": "Name: Alice, Grade: A\nName: Bob, Grade: B",
+      "explanation": "A class is a blueprint. `Student('Alice', 'A')` creates an object `s1` with its own `name` and `grade` attributes. Calling `.display()` on each object prints its own data."
+    },
+    {
+      "title": "Q11: Class Variables and Class Methods",
+      "description": "Write a Python program to explain class variables and class methods using a `Counter` class that tracks how many objects have been created.",
+      "answer": "class Counter:\n    count = 0\n\n    def __init__(self):\n        Counter.count += 1\n\n    @classmethod\n    def get_count(cls):\n        return cls.count\n\nc1 = Counter()\nc2 = Counter()\nc3 = Counter()\nprint('Objects created:', Counter.get_count())",
+      "expected_output": "Objects created: 3",
+      "explanation": "`count` is a class variable shared by all instances. `@classmethod` makes `get_count` a class method — it receives the class (`cls`) instead of an instance. Every `__init__` call increments the shared counter."
+    },
+    {
+      "title": "Q12: Decorators",
+      "description": "Write a Python program to explain the concept of decorators by creating a decorator that prints a message before and after a function runs.",
+      "answer": "def my_decorator(func):\n    def wrapper():\n        print('Before the function')\n        func()\n        print('After the function')\n    return wrapper\n\n@my_decorator\ndef say_hello():\n    print('Hello!')\n\nsay_hello()",
+      "expected_output": "Before the function\nHello!\nAfter the function",
+      "explanation": "`my_decorator` wraps `say_hello` inside `wrapper`. Using `@my_decorator` above the function definition is shorthand for `say_hello = my_decorator(say_hello)`. When `say_hello()` is called, the wrapper runs first, then the original function, then the after-message."
     }
   ]
 };
